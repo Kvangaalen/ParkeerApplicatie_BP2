@@ -1,0 +1,94 @@
+<html>
+    <head>
+        <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+        <script src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+        <script>
+            var map;
+            var markers = new OpenLayers.Layer.Markers("Markers");
+            var vector = new OpenLayers.Layer.Vector("Vectors");
+            var markers1 = new OpenLayers.Layer.Markers("Markers");
+            function start() {
+                map = new OpenLayers.Map("mapdiv");
+                map.addLayer(new OpenLayers.Layer.OSM());
+                var lonlat = new OpenLayers.LonLat(5.860000, 51.8388873)
+                        .transform(
+                                new OpenLayers.Projection("EPSG:4326"),
+                                map.getProjectionObject()
+                                );
+                var zoom = 13;
+                //
+                map.addControl(controls['selector']);
+                controls['selector'].activate();
+                map.addLayer(markers);
+                map.setCenter(lonlat, zoom);
+
+            }
+
+            function addPin(lon, lat, naam) {
+
+                var feature = new OpenLayers.Feature.Vector(
+                        new OpenLayers.Geometry.Point(lon, lat)
+                        .transform(
+                                new OpenLayers.Projection("EPSG:4326"),
+                                map.getProjectionObject()
+                                ),
+                        {description: "Naam: '" + naam + "'"},
+                        
+                        );
+
+                vector.addFeatures(feature);
+                map.addLayer(vector);
+            }
+            // selectie vanuit listview
+            function addPinOnSelect(lon, lat) {
+                markers.clearMarkers();
+                var lonlat = new OpenLayers.LonLat(lon, lat)
+                        .transform(
+                                new OpenLayers.Projection("EPSG:4326"),
+                                map.getProjectionObject()
+                                );
+                var size = new OpenLayers.Size(21, 25);
+                var offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
+                // eigen logo...
+                // var icon = new OpenLayers.Icon('img/test.png', size, offset);
+                markers.addMarker(new OpenLayers.Marker(lonlat, )); // icon));
+                map.addLayer(markers);
+
+            }
+
+            var controls = {
+                selector: new OpenLayers.Control.SelectFeature(vector, {onSelect: createPopup, onUnselect: destroyPopup})
+            };
+
+
+
+            function createPopup(feature) {
+                feature.popup = new OpenLayers.Popup.FramedCloud("pop",
+                        feature.geometry.getBounds().getCenterLonLat(),
+                        null,
+                        '<div class="markerContent">' + feature.attributes.description + '</div>',
+                        null,
+                        true,
+                        function () {
+                            controls['selector'].unselectAll();
+                        }
+                );
+                map.addPopup(feature.popup);
+            }
+
+
+            // verwijderen van popup
+            function destroyPopup(feature) {
+                feature.popup.destroy();
+                feature.popup = null;
+            }
+
+
+
+        </script>
+    </head>
+    <body onload="start()">        
+        <div id="mapdiv"></div>
+        <!--button type="button" onclick="addShape('4.73144102891065,51.602845202713|4.73169693604537,51.6028235086834|4.73203119187749,51.6027969584929')">Klik</button-->
+    </body>
+</html>
